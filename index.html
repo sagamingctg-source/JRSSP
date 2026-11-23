@@ -1683,7 +1683,7 @@
         </div>
         <div class="master-subpanel-body" id="subpanelBody-sheet-sync">
           <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:10px;">
-            GitHub-এ কোড রাখার সময় নিচের <strong>https://script.google.com/macros/s/AKfycbymjFGhb_mFkZXdf-f4mZK1OuQIxFDfKTb6Z-AdUATwJNUxY2pth6CRrJUGblPHD7FH/exec</strong> (অথবা নিচের ইনপুট থেকে একবার সেভ করলে) অটো-সেট থাকবে। যেকোনো ব্যবহারকারীর ব্রাউজারে খুললে অটোমেটিক গুগল শিট থেকে সিঙ্ক/আপডেট নেবে এবং পরিবর্তন করলে অটো-সিঙ্ক হবে।
+            GitHub-এ কোড রাখার সময় নিচের <strong>DEFAULT_GOOGLE_SHEET_URL</strong> (অথবা নিচের ইনপুট থেকে একবার সেভ করলে) অটো-সেট থাকবে। যেকোনো ব্যবহারকারীর ব্রাউজারে খুললে অটোমেটিক গুগল শিট থেকে সিঙ্ক/আপডেট নেবে এবং পরিবর্তন করলে অটো-সিঙ্ক হবে।
           </p>
           <div style="margin-bottom:10px; font-size:0.86rem;">
             <strong>অবস্থা:</strong> <span id="sheetSyncStatusText">অটো-সিঙ্ক প্রস্তুত</span>
@@ -1877,7 +1877,7 @@
   // GitHub-এ কোড রাখার সময় এখানে আপনার Apps Script Web App URL বসিয়ে দিন:
   // যেমন: const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/YOUR_ID/exec';
   // =========================================================================
-  const DEFAULT_GOOGLE_SHEET_URL = '';
+  const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbymjFGhb_mFkZXdf-f4mZK1OuQIxFDfKTb6Z-AdUATwJNUxY2pth6CRrJUGblPHD7FH/exec';
   const AUTO_SET_SHEET_KEY = 'rabindra_portal_autoset_sheet_url_v1';
   const STORAGE_KEY = 'event_org_manager_v5';
 
@@ -2018,8 +2018,13 @@
       if (el) el.value = today;
     });
     refreshAllUI();
-    if (appData.settings.googleSheetUrl && appData.settings.autoSyncSheet === 'on') {
-      loadFromGoogleSheet(true);
+    const activeSheetUrl = resolveInitialSheetUrl(appData.settings.googleSheetUrl);
+    if (activeSheetUrl) {
+      appData.settings.googleSheetUrl = activeSheetUrl;
+      if (!appData.settings.autoSyncSheet) appData.settings.autoSyncSheet = 'on';
+      if (appData.settings.autoSyncSheet === 'on') {
+        loadFromGoogleSheet(true);
+      }
     }
     startTwoWaySyncWatcher();
   };
