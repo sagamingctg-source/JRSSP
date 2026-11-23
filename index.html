@@ -681,6 +681,7 @@
     <div class="nav-group-label viewer-only-nav">ভিউয়ার সেক্টর</div>
     <div class="nav-item viewer-only-nav" data-tab="viewer-members" onclick="switchTab('viewer-members', this)">📋 সদস্য তালিকা</div>
     <div class="nav-item viewer-only-nav" data-tab="committees" onclick="switchTab('committees', this)">🏛️ কমিটি এবং পদসমূহ</div>
+    <div class="nav-item viewer-only-nav" data-tab="coupons" onclick="switchTab('coupons', this)">🎟️ কুপন হিসাব</div>
     <div class="nav-item viewer-only-nav" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 ড্যাশবোর্ড ও হিসাব</div>
     <div class="nav-item viewer-only-nav" data-tab="budget" onclick="switchTab('budget', this)">💼 বাজেট ও তুলনা</div>
     <div class="nav-item viewer-only-nav" data-tab="sponsors" onclick="switchTab('sponsors', this)">🤝 স্পনসর তালিকা</div>
@@ -1189,7 +1190,7 @@
       </div>
     </section>
 
-    <!-- 6. ADMIN ONLY: COUPONS -->
+    <!-- 6. ADMIN & VIEWER: COUPONS -->
     <section id="sec-coupons" class="section">
       <div class="section-header">
         <h2>কুপন হিসাব (বণ্টন, বিক্রি ও ক্রেতা তালিকা)</h2>
@@ -1198,11 +1199,11 @@
           <button class="btn btn-outline btn-sm" onclick="printSelectedTierCoupon()">🖨️ নির্বাচিত কুপনের তালিকা প্রিন্ট</button>
           <button class="btn btn-success btn-sm" onclick="printBuyerLedger()">🖨️ ক্রেতা ও বিক্রেতা তালিকা প্রিন্ট</button>
           <button class="btn btn-outline btn-sm" onclick="triggerPrint('all')">🖨️ সব প্রিন্ট</button>
-          <button class="btn btn-primary btn-sm" onclick="openPresentationModal('coupon')">🎬 কুপন ভিডিও</button>
+          <button class="btn btn-primary btn-sm viewer-hide-edit" onclick="openPresentationModal('coupon')">🎬 কুপন ভিডিও</button>
         </div>
       </div>
 
-      <div class="panel no-print">
+      <div class="panel no-print viewer-hide-edit">
         <h3>কুপন বণ্টন, হাতে-হাতে জমা ও এন্ট্রি</h3>
         <form onsubmit="addCouponRecord(event)">
           <div class="form-grid">
@@ -1494,6 +1495,11 @@
               <label>সুপার অ্যাডমিন পিন (PIN)</label>
               <input type="text" id="setAdminPin" placeholder="1234">
             </div>
+          </div>
+          <div id="brandingImagePreviewBar" style="margin-top:12px; padding:10px 12px; background:#FFFDF9; border:1px solid var(--border-color); border-radius:8px; display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:0.84rem;">
+            <span id="imgStatusBanner">ব্যানার: সেট করা নেই</span>
+            <span id="imgStatusProgLogo">অনুষ্ঠান লোগো: সেট করা নেই</span>
+            <span id="imgStatusOrgLogo">সংগঠন লোগো: সেট করা নেই</span>
           </div>
           <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn btn-primary" onclick="saveBrandingSettings()">💾 পরিচিতি সংরক্ষণ</button>
@@ -1879,6 +1885,8 @@
   // =========================================================================
   const DEFAULT_GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbymjFGhb_mFkZXdf-f4mZK1OuQIxFDfKTb6Z-AdUATwJNUxY2pth6CRrJUGblPHD7FH/exec';
   const AUTO_SET_SHEET_KEY = 'rabindra_portal_autoset_sheet_url_v1';
+  const DEFAULT_COVER_BANNER_PATH = './COVER.jpeg';
+  const DEFAULT_ORG_LOGO_PATH = './Insitute%20logo.jpg';
   const STORAGE_KEY = 'event_org_manager_v5';
 
   const PRESET_COMMITTEES = [
@@ -1930,11 +1938,11 @@
   const defaultData = {
     settings: {
       programName: '৪৫তম জাতীয় রবীন্দ্রসঙ্গীত সম্মেলন ২০২৭',
-      programBannerDataUrl: '',
+      programBannerDataUrl: DEFAULT_COVER_BANNER_PATH,
       programLogoDataUrl: '',
       orgName: 'জাতীয় রবীন্দ্রসঙ্গীত সম্মিলন পরিষদ, চট্টগ্রাম',
       orgSlogan: '১২ রামকৃষ্ণ মিশন লেন, আসকার দীঘির পশ্চিম পাড়, চট্টগ্রাম | ০১৭৩৬-১৫২২৪২',
-      orgLogoDataUrl: '',
+      orgLogoDataUrl: DEFAULT_ORG_LOGO_PATH,
       adminPin: '1234',
       googleSheetUrl: resolveInitialSheetUrl(''),
       autoSyncSheet: 'on'
@@ -1979,6 +1987,12 @@
       };
       merged.settings.googleSheetUrl = resolveInitialSheetUrl(merged.settings.googleSheetUrl);
       if (!merged.settings.autoSyncSheet) merged.settings.autoSyncSheet = 'on';
+      if (!merged.settings.programBannerDataUrl || merged.settings.programBannerDataUrl === '[IMAGE_STORED_LOCALLY]') {
+        merged.settings.programBannerDataUrl = DEFAULT_COVER_BANNER_PATH;
+      }
+      if (!merged.settings.orgLogoDataUrl || merged.settings.orgLogoDataUrl === '[IMAGE_STORED_LOCALLY]') {
+        merged.settings.orgLogoDataUrl = DEFAULT_ORG_LOGO_PATH;
+      }
       merged.members = (merged.members || []).map(m => ({
         id: m.id || ('mem_' + Math.random().toString(36).slice(2, 9)),
         name: m.name || '',
@@ -2066,8 +2080,8 @@
   }
 
   function switchTab(tabId, el) {
-    const adminOnlyTabs = ['viewer-audit', 'approvals', 'coupons', 'settings'];
-    const viewerAllowedTabs = ['viewer-members', 'committees', 'dashboard', 'budget', 'sponsors'];
+    const adminOnlyTabs = ['viewer-audit', 'approvals', 'settings'];
+    const viewerAllowedTabs = ['viewer-members', 'committees', 'coupons', 'dashboard', 'budget', 'sponsors'];
     if (adminOnlyTabs.includes(tabId) && !isAdminLoggedIn) {
       alert('এই সেকশনটি শুধুমাত্র সুপার অ্যাডমিনের জন্য সংরক্ষিত।');
       return;
@@ -2222,6 +2236,12 @@
       loginCount: Number(v.loginCount) || 0,
       printCount: Number(v.printCount) || 0
     }));
+    if (!normalized.settings.programBannerDataUrl || normalized.settings.programBannerDataUrl === '[IMAGE_STORED_LOCALLY]') {
+      normalized.settings.programBannerDataUrl = DEFAULT_COVER_BANNER_PATH;
+    }
+    if (!normalized.settings.orgLogoDataUrl || normalized.settings.orgLogoDataUrl === '[IMAGE_STORED_LOCALLY]') {
+      normalized.settings.orgLogoDataUrl = DEFAULT_ORG_LOGO_PATH;
+    }
     return normalized;
   }
 
@@ -2295,10 +2315,16 @@
       const res = await fetch(`${url}${sep}action=getAll&_t=${Date.now()}`);
       const json = await res.json();
       if (json && json.status === 'ok' && json.data) {
+        const pickValidImg = (remoteVal, localVal) => {
+          if (localVal && String(localVal).startsWith('data:image/')) return localVal;
+          if (remoteVal && (String(remoteVal).startsWith('data:image/') || String(remoteVal).startsWith('http'))) return remoteVal;
+          return localVal || '';
+        };
+        const rSettings = (json.data && json.data.settings) || {};
         const localImgs = {
-          programBannerDataUrl: appData.settings.programBannerDataUrl,
-          programLogoDataUrl: appData.settings.programLogoDataUrl,
-          orgLogoDataUrl: appData.settings.orgLogoDataUrl,
+          programBannerDataUrl: pickValidImg(rSettings.programBannerDataUrl, appData.settings.programBannerDataUrl),
+          programLogoDataUrl: pickValidImg(rSettings.programLogoDataUrl, appData.settings.programLogoDataUrl),
+          orgLogoDataUrl: pickValidImg(rSettings.orgLogoDataUrl, appData.settings.orgLogoDataUrl),
           googleSheetUrl: url,
           autoSyncSheet: appData.settings.autoSyncSheet || 'on'
         };
@@ -2328,7 +2354,7 @@
       isAdminLoggedIn = false;
       document.body.classList.remove('admin-logged-in');
       const activeSection = document.querySelector('.section.active');
-      const adminTabIds = ['sec-dashboard', 'sec-viewer-audit', 'sec-approvals', 'sec-coupons', 'sec-budget', 'sec-sponsors', 'sec-settings'];
+      const adminTabIds = ['sec-dashboard', 'sec-viewer-audit', 'sec-approvals', 'sec-budget', 'sec-sponsors', 'sec-settings'];
       if (activeSection && adminTabIds.includes(activeSection.id)) {
         const defaultNav = document.querySelector('.sidebar .nav-item[data-tab="coupon-entry"]');
         switchTab('coupon-entry', defaultNav);
@@ -2394,7 +2420,7 @@
     } else {
       document.body.classList.remove('viewer-logged-in');
       const activeSec = document.querySelector('.section.active');
-      const viewerOnlySecIds = ['sec-viewer-members', 'sec-committees', 'sec-dashboard', 'sec-budget', 'sec-sponsors'];
+      const viewerOnlySecIds = ['sec-viewer-members', 'sec-committees', 'sec-coupons', 'sec-dashboard', 'sec-budget', 'sec-sponsors'];
       if (activeSec && viewerOnlySecIds.includes(activeSec.id)) {
         const defaultNav = document.querySelector('.sidebar .nav-item[data-tab="coupon-entry"]');
         switchTab('coupon-entry', defaultNav);
@@ -2434,10 +2460,35 @@
     document.getElementById('headerOrgName').textContent = s.orgName || 'আয়োজক সংগঠনের নাম';
     document.getElementById('headerOrgSlogan').textContent = s.orgSlogan || 'সংগঠনের স্লোগান / ঠিকানা';
 
+    const hasValidImg = (val) => typeof val === 'string' && (
+      val.startsWith('data:image/') ||
+      val.startsWith('http://') ||
+      val.startsWith('https://') ||
+      val.startsWith('./') ||
+      val.startsWith('../') ||
+      val.endsWith('.jpg') ||
+      val.endsWith('.jpeg') ||
+      val.endsWith('.png') ||
+      val.endsWith('.webp')
+    );
+
     const bannerStrip = document.getElementById('programBannerStrip');
     const bannerImg = document.getElementById('programBannerImg');
-    if (s.programBannerDataUrl) {
-      bannerImg.src = s.programBannerDataUrl;
+    const bannerSrc = (s.programBannerDataUrl && s.programBannerDataUrl !== '[IMAGE_STORED_LOCALLY]')
+      ? s.programBannerDataUrl
+      : DEFAULT_COVER_BANNER_PATH;
+    if (hasValidImg(bannerSrc)) {
+      bannerImg.onerror = function() {
+        if (bannerImg.getAttribute('data-alt-tried') !== '1' && bannerSrc.includes('%20')) {
+          bannerImg.setAttribute('data-alt-tried', '1');
+          bannerImg.src = decodeURIComponent(bannerSrc);
+          return;
+        }
+        bannerImg.src = '';
+        bannerStrip.classList.remove('has-banner');
+      };
+      bannerImg.setAttribute('data-alt-tried', '0');
+      bannerImg.src = bannerSrc;
       bannerStrip.classList.add('has-banner');
     } else {
       bannerImg.src = '';
@@ -2446,7 +2497,11 @@
 
     const pLogoThumb = document.getElementById('programLogoThumb');
     const pLogoImg = document.getElementById('programLogoImg');
-    if (s.programLogoDataUrl) {
+    if (hasValidImg(s.programLogoDataUrl)) {
+      pLogoImg.onerror = function() {
+        pLogoImg.src = '';
+        pLogoThumb.classList.remove('has-img');
+      };
       pLogoImg.src = s.programLogoDataUrl;
       pLogoThumb.classList.add('has-img');
     } else {
@@ -2455,8 +2510,22 @@
     }
 
     const orgLogoBox = document.getElementById('headerOrgLogo');
-    if (s.orgLogoDataUrl) {
-      orgLogoBox.innerHTML = `<img src="${s.orgLogoDataUrl}" alt="Org Logo">`;
+    const orgLogoSrc = (s.orgLogoDataUrl && s.orgLogoDataUrl !== '[IMAGE_STORED_LOCALLY]')
+      ? s.orgLogoDataUrl
+      : DEFAULT_ORG_LOGO_PATH;
+    if (hasValidImg(orgLogoSrc)) {
+      orgLogoBox.innerHTML = `<img id="headerOrgLogoImg" src="${escapeHtml(orgLogoSrc)}" alt="Org Logo">`;
+      const orgImgEl = document.getElementById('headerOrgLogoImg');
+      if (orgImgEl) {
+        orgImgEl.onerror = function() {
+          if (orgImgEl.getAttribute('data-alt-tried') !== '1') {
+            orgImgEl.setAttribute('data-alt-tried', '1');
+            orgImgEl.src = './Insitute logo.jpg';
+            return;
+          }
+          orgLogoBox.innerHTML = 'লোগো';
+        };
+      }
     } else {
       orgLogoBox.innerHTML = 'লোগো';
     }
@@ -3036,6 +3105,10 @@
   }
 
   function editCurrentlySelectedMember() {
+    if (!isAdminLoggedIn) {
+      alert('ভিউয়ার লগইনে শুধুমাত্র হিসাব দেখা যাবে, কোনো এডিট করা যাবে না।');
+      return;
+    }
     const selMember = document.getElementById('cpSelectMember');
     const chosen = selMember ? selMember.value : '';
     if (!chosen || chosen === '__ALL__') {
@@ -3162,6 +3235,7 @@
   function renderCoupons() {
     const container = document.getElementById('couponDynamicContent');
     if (!container) return;
+    const isViewerOnly = !isAdminLoggedIn && !!activeViewerSession;
     const mode = (document.getElementById('cpViewMode') && document.getElementById('cpViewMode').value) || 'member';
     const selMember = (document.getElementById('cpSelectMember') && document.getElementById('cpSelectMember').value) || '__ALL__';
     const selTier = (document.getElementById('cpSelectTier') && document.getElementById('cpSelectTier').value) || '__ALL__';
@@ -3176,22 +3250,28 @@
         if (!buyerTierFilter || buyerTierFilter === '__ALL__') return true;
         return `${Number(s.unitPrice) || 0}__${s.tierLabel}` === buyerTierFilter;
       });
+      const viewerBanner = isViewerOnly
+        ? `<div style="background:#FCF8EE; border:1px solid var(--gold); color:var(--primary-dark); padding:8px 12px; border-radius:6px; margin-bottom:10px; font-size:0.88rem; font-weight:600;">👁️ ভিউয়ার ভিউ (শুধুমাত্র দেখার জন্য — কোনো এডিট বা পরিবর্তন করা যাবে না)</div>`
+        : '';
       if (salesList.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:16px;">কোনো কুপন ক্রেতার ডাটা নেই।</p>`;
+        container.innerHTML = `${viewerBanner}<p style="text-align:center; color:var(--text-muted); padding:16px;">কোনো কুপন ক্রেতার ডাটা নেই।</p>`;
         return;
       }
       let totQty = 0, totMoney = 0;
       const rowsHtml = salesList.map((s, idx) => {
         const q = Number(s.qty) || 0, p = Number(s.unitPrice) || 0, amt = q * p;
         totQty += q; totMoney += amt;
-        return `<tr><td>${idx + 1}</td><td>${s.date}</td><td><strong>${escapeHtml(s.buyer)}</strong></td><td><span class="status-pill status-approved">${p} ৳ (${escapeHtml(s.tierLabel)})</span></td><td><strong>${q} টি</strong></td><td style="font-weight:700;">${formatMoney(amt)}</td><td><strong>${escapeHtml(s.seller)}</strong></td><td class="no-print"><button class="btn btn-danger btn-sm" onclick="deleteCouponSale('${s.id}')">🗑️</button></td></tr>`;
+        return `<tr><td>${idx + 1}</td><td>${s.date}</td><td><strong>${escapeHtml(s.buyer)}</strong></td><td><span class="status-pill status-approved">${p} ৳ (${escapeHtml(s.tierLabel)})</span></td><td><strong>${q} টি</strong></td><td style="font-weight:700;">${formatMoney(amt)}</td><td><strong>${escapeHtml(s.seller)}</strong></td><td class="no-print viewer-hide-edit"><button class="btn btn-danger btn-sm" onclick="deleteCouponSale('${s.id}')">🗑️</button></td></tr>`;
       }).join('');
-      container.innerHTML = `<div style="background:#FFFDF9; border:1px solid var(--border-color); border-radius:8px; padding:14px;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;"><strong style="font-size:1.05rem; color:var(--primary);">🧾 কুপন যারা ক্রয় করেছেন তাদের তালিকা</strong><button type="button" class="btn btn-success btn-sm no-print" onclick="printBuyerLedger()">🖨️ এই তালিকা প্রিন্ট করুন</button></div><div class="table-responsive"><table><thead><tr><th>ক্রমিক</th><th>তারিখ</th><th>ক্রেতা</th><th>কত টাকার কুপন</th><th>সংখ্যা</th><th>মোট টাকা</th><th>বিক্রেতা / রেফারেন্স</th><th class="no-print">অ্যাকশন</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr style="font-weight:700; background:#F5F0E6;"><td colspan="4">মোট</td><td>${totQty} টি</td><td>${formatMoney(totMoney)}</td><td colspan="2">-</td></tr></tfoot></table></div></div>`;
+      container.innerHTML = `${viewerBanner}<div style="background:#FFFDF9; border:1px solid var(--border-color); border-radius:8px; padding:14px;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;"><strong style="font-size:1.05rem; color:var(--primary);">🧾 কুপন যারা ক্রয় করেছেন তাদের তালিকা</strong><button type="button" class="btn btn-success btn-sm no-print" onclick="printBuyerLedger()">🖨️ এই তালিকা প্রিন্ট করুন</button></div><div class="table-responsive"><table><thead><tr><th>ক্রমিক</th><th>তারিখ</th><th>ক্রেতা</th><th>কত টাকার কুপন</th><th>সংখ্যা</th><th>মোট টাকা</th><th>বিক্রেতা / রেফারেন্স</th><th class="no-print viewer-hide-edit">অ্যাকশন</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr style="font-weight:700; background:#F5F0E6;"><td colspan="4">মোট</td><td>${totQty} টি</td><td>${formatMoney(totMoney)}</td><td class="viewer-hide-edit">-</td><td>-</td></tr></tfoot></table></div></div>`;
       return;
     }
 
+    const viewerBanner = isViewerOnly
+      ? `<div style="background:#FCF8EE; border:1px solid var(--gold); color:var(--primary-dark); padding:8px 12px; border-radius:6px; margin-bottom:10px; font-size:0.88rem; font-weight:600;">👁️ ভিউয়ার ভিউ (শুধুমাত্র দেখার জন্য — কোনো এডিট বা পরিবর্তন করা যাবে না)</div>`
+      : '';
     if (appData.coupons.length === 0) {
-      container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:16px;">কোনো কুপন হিসাব নেই।</p>`;
+      container.innerHTML = `${viewerBanner}<p style="text-align:center; color:var(--text-muted); padding:16px;">কোনো কুপন হিসাব নেই।</p>`;
       return;
     }
 
@@ -3209,15 +3289,15 @@
         mObj.totalIssued += iss; mObj.totalSold += sld; mObj.totalSoldVal += sld * prc; mObj.totalDeposited += dep;
         mObj.records.push(c);
       });
-      container.innerHTML = Array.from(memberMap.values()).map(m => {
+      container.innerHTML = viewerBanner + Array.from(memberMap.values()).map(m => {
         const unsold = Math.max(0, m.totalIssued - m.totalSold);
         const due = Math.max(0, m.totalSoldVal - m.totalDeposited);
         const encodedM = encodeURIComponent(m.member);
         const detailRows = m.records.map(r => {
           const u = Math.max(0, r.issued - r.sold), sv = r.sold * r.unitPrice, d = Math.max(0, sv - r.deposited);
-          return `<tr><td><strong>${escapeHtml(r.tierLabel)} (${r.unitPrice} ৳)</strong></td><td>${r.issued}</td><td style="color:var(--success); font-weight:700;">${r.sold}</td><td>${u}</td><td>${formatMoney(sv)}</td><td style="color:var(--success); font-weight:600;">${formatMoney(r.deposited)}</td><td style="color:${d > 0 ? 'var(--danger)' : 'inherit'}; font-weight:600;">${formatMoney(d)}</td><td>${escapeHtml(r.note || '-')}</td><td class="no-print"><button class="btn btn-outline btn-sm" onclick="editCoupon('${r.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('coupons', '${r.id}')">🗑️</button></td></tr>`;
+          return `<tr><td><strong>${escapeHtml(r.tierLabel)} (${r.unitPrice} ৳)</strong></td><td>${r.issued}</td><td style="color:var(--success); font-weight:700;">${r.sold}</td><td>${u}</td><td>${formatMoney(sv)}</td><td style="color:var(--success); font-weight:600;">${formatMoney(r.deposited)}</td><td style="color:${d > 0 ? 'var(--danger)' : 'inherit'}; font-weight:600;">${formatMoney(d)}</td><td>${escapeHtml(r.note || '-')}</td><td class="no-print viewer-hide-edit"><button class="btn btn-outline btn-sm" onclick="editCoupon('${r.id}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem('coupons', '${r.id}')">🗑️</button></td></tr>`;
         }).join('');
-        return `<div style="background:#FFFDF9; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-bottom:14px;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed var(--border-color);"><strong style="font-size:1.06rem; color:var(--primary);">👤 ${escapeHtml(m.member)}</strong><button type="button" class="btn btn-primary btn-sm no-print" onclick="openMemberAllTiersEdit('${encodedM}')">✏️ সব দর একসাথে এডিট</button></div><div class="table-responsive"><table><thead><tr><th>কুপন মূল্য</th><th>বণ্টন (টি)</th><th>বিক্রি (টি)</th><th>অবিক্রিত</th><th>বিক্রিত মূল্য</th><th>জমাকৃত টাকা</th><th>বকেয়া টাকা</th><th>নোট</th><th class="no-print">অ্যাকশন</th></tr></thead><tbody>${detailRows}</tbody><tfoot><tr style="font-weight:700; background:#F5F0E6;"><td>মোট হিসাব</td><td>${m.totalIssued}</td><td style="color:var(--success);">${m.totalSold}</td><td>${unsold}</td><td>${formatMoney(m.totalSoldVal)}</td><td style="color:var(--success);">${formatMoney(m.totalDeposited)}</td><td style="color:${due > 0 ? 'var(--danger)' : 'inherit'};">${formatMoney(due)}</td><td>-</td><td class="no-print">-</td></tr></tfoot></table></div></div>`;
+        return `<div style="background:#FFFDF9; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-bottom:14px;"><div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed var(--border-color);"><strong style="font-size:1.06rem; color:var(--primary);">👤 ${escapeHtml(m.member)}</strong><button type="button" class="btn btn-primary btn-sm no-print viewer-hide-edit" onclick="openMemberAllTiersEdit('${encodedM}')">✏️ সব দর একসাথে এডিট</button></div><div class="table-responsive"><table><thead><tr><th>কুপন মূল্য</th><th>বণ্টন (টি)</th><th>বিক্রি (টি)</th><th>অবিক্রিত</th><th>বিক্রিত মূল্য</th><th>জমাকৃত টাকা</th><th>বকেয়া টাকা</th><th>নোট</th><th class="no-print viewer-hide-edit">অ্যাকশন</th></tr></thead><tbody>${detailRows}</tbody><tfoot><tr style="font-weight:700; background:#F5F0E6;"><td>মোট হিসাব</td><td>${m.totalIssued}</td><td style="color:var(--success);">${m.totalSold}</td><td>${unsold}</td><td>${formatMoney(m.totalSoldVal)}</td><td style="color:var(--success);">${formatMoney(m.totalDeposited)}</td><td style="color:${due > 0 ? 'var(--danger)' : 'inherit'};">${formatMoney(due)}</td><td>-</td><td class="no-print viewer-hide-edit">-</td></tr></tfoot></table></div></div>`;
       }).join('');
     } else {
       const tierRecords = (!selTier || selTier === '__ALL__') ? appData.coupons : appData.coupons.filter(c => `${Number(c.unitPrice) || 0}__${c.tierLabel}` === selTier);
@@ -3234,7 +3314,7 @@
         prev.issued += Number(c.issued) || 0; prev.sold += Number(c.sold) || 0; prev.dep += Number(c.deposited) || 0;
         tg.byMember.set(c.member, prev);
       });
-      container.innerHTML = Array.from(tierMap.values()).sort((a, b) => a.price - b.price).map(tg => {
+      container.innerHTML = viewerBanner + Array.from(tierMap.values()).sort((a, b) => a.price - b.price).map(tg => {
         let totIssued = 0, totIssuedTaka = 0, totSold = 0, totSoldTaka = 0, totDep = 0;
         const rows = Array.from(tg.byMember.entries()).map(([mName, d], idx) => {
           const issuedTaka = d.issued * tg.price, soldTaka = d.sold * tg.price, due = Math.max(0, soldTaka - d.dep);
@@ -3247,6 +3327,10 @@
   }
 
   function openMemberAllTiersEdit(encodedMember) {
+    if (!isAdminLoggedIn) {
+      alert('ভিউয়ার লগইনে শুধুমাত্র হিসাব দেখা যাবে, কোনো এডিট করা যাবে না।');
+      return;
+    }
     const memberName = decodeURIComponent(encodedMember);
     const memberRecords = appData.coupons.filter(c => c.member === memberName);
     const combinedTiers = [];
@@ -3299,6 +3383,10 @@
   }
 
   function editCoupon(id) {
+    if (!isAdminLoggedIn) {
+      alert('ভিউয়ার লগইনে শুধুমাত্র হিসাব দেখা যাবে, কোনো এডিট করা যাবে না।');
+      return;
+    }
     const c = appData.coupons.find(x => x.id === id);
     if (!c) return;
     openEditModal(`কুপন আপডেট (${c.member} — ${c.unitPrice} ৳)`, `
@@ -3577,6 +3665,7 @@
     document.getElementById('committeeNameTags').innerHTML = appData.committeeNames.map((c, idx) => `<div class="tag-item"><span>${escapeHtml(c)}</span><button onclick="deleteStringItem('committeeNames', ${idx})">×</button></div>`).join('');
     document.getElementById('roleNameTags').innerHTML = appData.roles.map((r, idx) => `<div class="tag-item"><span>${escapeHtml(r)}</span><button onclick="deleteStringItem('roles', ${idx})">×</button></div>`).join('');
     renderViewerCredentialsInRoster();
+    if (typeof renderImagePreviewStatus === 'function') renderImagePreviewStatus();
   }
 
   function saveBrandingSettings() {
@@ -3590,27 +3679,92 @@
   }
 
   function handleImageUpload(e, fieldKey) {
-    const file = e.target && e.target.files ? e.target.files[0] : null;
+    const inputEl = e.target;
+    const file = inputEl && inputEl.files ? inputEl.files[0] : null;
     if (!file) return;
-    const maxWidth = fieldKey === 'programBannerDataUrl' ? 1400 : 450;
-    const maxHeight = fieldKey === 'programBannerDataUrl' ? 520 : 450;
+
+    const maxWidth = fieldKey === 'programBannerDataUrl' ? 1200 : 400;
+    const maxHeight = fieldKey === 'programBannerDataUrl' ? 420 : 400;
+
+    const commitDataUrl = (dataUrl) => {
+      if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+        alert('ছবিটি পড়া যায়নি। অন্য একটি ছবি নির্বাচন করুন।');
+        return;
+      }
+      appData.settings[fieldKey] = dataUrl;
+      if (inputEl) inputEl.value = '';
+      saveData();
+      renderCoverAndHeader();
+      renderImagePreviewStatus();
+    };
+
     const reader = new FileReader();
     reader.onload = function(evt) {
-      const img = new Image();
-      img.onload = function() {
-        let width = img.width, height = img.height;
-        const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-        width = Math.max(1, Math.round(width * ratio)); height = Math.max(1, Math.round(height * ratio));
-        const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        appData.settings[fieldKey] = file.type === 'image/png' ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.84);
-        if (e.target) e.target.value = '';
-        saveData(); renderCoverAndHeader();
-      };
-      img.onerror = function() { appData.settings[fieldKey] = evt.target.result; if (e.target) e.target.value = ''; saveData(); renderCoverAndHeader(); };
-      img.src = evt.target.result;
+      const rawUrl = evt && evt.target ? evt.target.result : '';
+      if (!rawUrl) {
+        alert('ছবি লোড করা যায়নি।');
+        return;
+      }
+      try {
+        const img = new Image();
+        img.onload = function() {
+          try {
+            let width = img.naturalWidth || img.width || 1;
+            let height = img.naturalHeight || img.height || 1;
+            const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+            width = Math.max(1, Math.round(width * ratio));
+            height = Math.max(1, Math.round(height * ratio));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              commitDataUrl(rawUrl);
+              return;
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            const mimeType = (file.type === 'image/png' || file.type === 'image/webp') ? file.type : 'image/jpeg';
+            const quality = mimeType === 'image/jpeg' ? 0.82 : undefined;
+            const outUrl = quality !== undefined ? canvas.toDataURL(mimeType, quality) : canvas.toDataURL(mimeType);
+            commitDataUrl(outUrl && outUrl.length > 50 ? outUrl : rawUrl);
+          } catch (canvasErr) {
+            console.warn('Canvas resize fallback:', canvasErr);
+            commitDataUrl(rawUrl);
+          }
+        };
+        img.onerror = function() {
+          commitDataUrl(rawUrl);
+        };
+        img.src = rawUrl;
+      } catch (imgErr) {
+        console.warn('Image load fallback:', imgErr);
+        commitDataUrl(rawUrl);
+      }
+    };
+    reader.onerror = function() {
+      alert('ফাইল রিড করতে সমস্যা হয়েছে।');
     };
     reader.readAsDataURL(file);
+  }
+
+  function renderImagePreviewStatus() {
+    const s = appData.settings || {};
+    const statusMap = [
+      { id: 'imgStatusBanner', val: s.programBannerDataUrl, label: 'ব্যানার' },
+      { id: 'imgStatusProgLogo', val: s.programLogoDataUrl, label: 'অনুষ্ঠান লোগো' },
+      { id: 'imgStatusOrgLogo', val: s.orgLogoDataUrl, label: 'সংগঠন লোগো' }
+    ];
+    statusMap.forEach(item => {
+      const el = document.getElementById(item.id);
+      if (!el) return;
+      if (item.val && String(item.val).startsWith('data:image/')) {
+        const kb = Math.round((item.val.length * 3) / 4 / 1024);
+        el.innerHTML = `<span style="color:var(--success); font-weight:700;">✓ ${item.label} সেট আছে (~${kb} KB)</span> <img src="${item.val}" style="height:28px; width:auto; vertical-align:middle; border-radius:3px; border:1px solid #ccc; margin-left:6px;">`;
+      } else {
+        el.innerHTML = `<span style="color:var(--text-muted);">${item.label}: সেট করা নেই</span>`;
+      }
+    });
   }
 
   function clearImage(fieldKey) { appData.settings[fieldKey] = ''; saveData(); }
@@ -3726,7 +3880,15 @@
     if (val && !appData.roles.includes(val)) { appData.roles.push(val); document.getElementById('newRoleName').value = ''; saveData(); }
   }
   function deleteStringItem(key, idx) { if (!confirm('মুছে ফেলতে চান?')) return; appData[key].splice(idx, 1); saveData(); }
-  function deleteItem(collectionKey, id) { if (!confirm('নিশ্চিতভাবে মুছে ফেলতে চান?')) return; appData[collectionKey] = appData[collectionKey].filter(x => x.id !== id); saveData(); }
+  function deleteItem(collectionKey, id) {
+    if (!isAdminLoggedIn) {
+      alert('ভিউয়ার লগইনে শুধুমাত্র হিসাব দেখা যাবে, কোনো এডিট বা মুছে ফেলা যাবে না।');
+      return;
+    }
+    if (!confirm('নিশ্চিতভাবে মুছে ফেলতে চান?')) return;
+    appData[collectionKey] = appData[collectionKey].filter(x => x.id !== id);
+    saveData();
+  }
 
   function exportBackup() {
     const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
